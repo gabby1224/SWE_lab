@@ -118,8 +118,18 @@ public class TextAnalyzer {
                 edge.addAttribute("ui.label", edge.getAttribute("weight").toString());
             }
         }
+    }
 
-
+    // init origin graph
+    public void init_graph()
+    {
+        for (Node node : graph) {
+            node.setAttribute("ui.style", "fill-color: blue;");
+        }
+        for (Edge edge : graph.getEachEdge())
+        {
+            edge.setAttribute("ui.style", "fill-color: black;");
+        }
     }
 
     // 判断桥接词
@@ -226,39 +236,45 @@ public class TextAnalyzer {
     }
 }
 
-    // 不能用
-    public void Dijstra(String start, String end, Graph g)
+    // 可以输出红色最短路径，并打印所有节点最短路径长度
+    public void Dijstra(String start, String end)
     {
-        g.display(false);
+        if (graph.getNode(start) == null|| graph.getNode(end) == null) {
+            System.out.println("One or both nodes not in the graph!");
+            return;
+        }
 
         // Edge lengths are stored in an attribute called "length"
         // The length of a path is the sum of the lengths of its edges
-        Dijkstra dijkstra = new Dijkstra(Dijkstra.Element.EDGE, null, "length");
+        Dijkstra dijkstra = new Dijkstra(Dijkstra.Element.EDGE, null, "weight");
 
         // Compute the shortest paths in g from A to all nodes
-        dijkstra.init(g);
-        dijkstra.setSource(g.getNode("A"));
+        dijkstra.init(this.graph);
+        dijkstra.setSource(this.graph.getNode(start));
         dijkstra.compute();
 
         // Print the lengths of all the shortest paths
         // 可选功能：
-        for (Node node : g)
+        for (Node node : this.graph)
         {
             System.out.printf("%s->%s:%10.2f%n", dijkstra.getSource(), node,
                     dijkstra.getPathLength(node));
         }
 
-
+        System.out.printf("the destination node is:%s\n", this.graph.getNode(end).getId());
         // Color in blue all the nodes on the shortest path form A to B
-        for (Node node : dijkstra.getPathNodes(g.getNode("B")))
-            node.setAttribute("ui.style", "fill-color: blue;");
-
-        // Color in red all the edges in the shortest path tree
-        for (Edge edge : dijkstra.getTreeEdges())
+        for (Node node : dijkstra.getPathNodes(this.graph.getNode(end)))
+        {
+            node.setAttribute("ui.style", "fill-color: yellow;");
+            System.out.printf(node.getId());
+            if(node != this.graph.getNode(end))
+                System.out.printf("->");
+        }
+        for (Edge edge: dijkstra.getPathEdges(graph.getNode(end)))
+        {
             edge.setAttribute("ui.style", "fill-color: red;");
+        }
 
-        // Print the shortest path from A to B
-        System.out.println(dijkstra.getPath(g.getNode("B")));
 
     }
 
@@ -275,11 +291,13 @@ public class TextAnalyzer {
                 String fun = scanner.nextLine();
 
                 if (fun.equals("3")) {
+                    tg.init_graph();
                     System.out.println("Enter two words separated by space to find bridge words:");
                     String[] words = scanner.nextLine().split("\\s+");
                     if (words.length != 2) {
                         System.out.println("Please enter exactly two words.");
                         System.out.println("选择你要实现的功能 3查询桥接词 4根据bridge word生成新文本 5计算两个单词之间的最短路径 6随机游走");
+
                         continue;
                     }
 
@@ -301,6 +319,7 @@ public class TextAnalyzer {
                     System.out.println("选择你要实现的功能 3查询桥接词 4根据bridge word生成新文本 5计算两个单词之间的最短路径 6随机游走");
                 }
                 if (fun.equals("4")) {
+                    tg.init_graph();
                     System.out.println("输入一段话");
                     String sentence = scanner.nextLine();
                     List<String> result = tg.generateNewText(sentence);
@@ -321,6 +340,7 @@ public class TextAnalyzer {
                     System.out.println("选择你要实现的功能 3查询桥接词 4根据bridge word生成新文本 5计算两个单词之间的最短路径 6随机游走");
                 }
                 if (fun.equals("5")) {
+                    tg.init_graph();
                     System.out.println("输入两个词");
                     String[] words = scanner.nextLine().split("\\s+");
                     if (words.length != 2) {
@@ -329,7 +349,7 @@ public class TextAnalyzer {
                         continue;
                     }
                     List<String> path = tg.shortestPath(words[0].toLowerCase(), words[1].toLowerCase());
-                    tg.Dijstra(words[0].toLowerCase(), words[1].toLowerCase(), tg.graph);
+                    tg.Dijstra(words[0].toLowerCase(), words[1].toLowerCase());
 
                     if ( path.isEmpty()){
                         System.out.println("不可达");
@@ -337,20 +357,20 @@ public class TextAnalyzer {
                         continue;
 
                     }
-                    StringBuilder output = new StringBuilder();
-                    for (int i = 0; i < path.size(); i++) {
-                        // 将当前字符串追加到输出中
-                        output.append(path.get(i));
-
-                        // 检查是否是列表中的最后一个字符串
-                        if (i < path.size() - 1) {
-                        // 如果不是最后一个字符串，添加一个空格
-                        output.append("->");
-
-                    }
-                    }
+//                    StringBuilder output = new StringBuilder();
+//                    for (int i = 0; i < path.size(); i++) {
+//                        // 将当前字符串追加到输出中
+//                        output.append(path.get(i));
+//
+//                        // 检查是否是列表中的最后一个字符串
+//                        if (i < path.size() - 1) {
+//                        // 如果不是最后一个字符串，添加一个空格
+//                        output.append("->");
+//
+//                    }
+//                    }
                     // 输出最终结果
-                    System.out.println(output.toString());
+//                    System.out.println(output.toString());
                     System.out.println("选择你要实现的功能 3查询桥接词 4根据bridge word生成新文本 5计算两个单词之间的最短路径 6随机游走");
                 }
             }
