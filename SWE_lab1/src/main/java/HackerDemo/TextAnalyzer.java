@@ -1,8 +1,11 @@
 package HackerDemo;
+import org.graphstream.algorithm.randomWalk.RandomWalk;
 import org.graphstream.graph.*;
 import org.graphstream.graph.implementations.*;
 import org.graphstream.algorithm.Dijkstra;
 import org.graphstream.ui.view.Viewer;
+import scala.util.parsing.combinator.testing.Str;
+
 import java.io.*;
 import java.util.*;
 import java.util.Random;
@@ -278,6 +281,37 @@ public class TextAnalyzer {
 
     }
 
+    //function 6: 图上随机游走，直到判环
+    public String Randomwalk()
+    {
+        RandomWalk rwalk = new RandomWalk();
+
+// Populate the graph.
+        rwalk.setEntityCount(this.graph.getNodeCount());
+        rwalk.init(this.graph);
+        int[] passed = new int[this.graph.getNodeCount()];
+        String ret = new String();
+
+        for(int i=0; i<1000; i++) {
+            rwalk.compute();
+            for(Node n : this.graph)
+            {
+                int id = n.getIndex();
+                if(rwalk.getPasses(n) > passed[id])
+                {
+                    System.out.printf("%s ", n.getId());
+                    ret += n.getId() + " ";
+                    passed[id] = (int) rwalk.getPasses(n);
+                    break;
+                }
+            }
+        }
+
+        rwalk.terminate();
+
+        return ret;
+    }
+
     public static void main(String[] args) throws IOException {
         Scanner scanner = new Scanner(System.in); // 创建Scanner对象
         System.out.println("请输入文本文件的地址：");
@@ -356,6 +390,23 @@ public class TextAnalyzer {
                         System.out.println("选择你要实现的功能 3查询桥接词 4根据bridge word生成新文本 5计算两个单词之间的最短路径 6随机游走");
                         continue;
 
+                    }
+                    System.out.println("选择你要实现的功能 3查询桥接词 4根据bridge word生成新文本 5计算两个单词之间的最短路径 6随机游走");
+                }
+                if (fun.equals("6"))
+                {
+                    tg.init_graph();
+                    String ret = tg.Randomwalk();
+                    System.out.println(ret);
+                    //todo: 写入文件
+                    FileWriter writer;
+                    try {
+                        writer = new FileWriter("./randomwalk.txt", true);
+                        writer.write(ret);
+                        writer.flush();
+                        writer.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
                     System.out.println("选择你要实现的功能 3查询桥接词 4根据bridge word生成新文本 5计算两个单词之间的最短路径 6随机游走");
                 }
