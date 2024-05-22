@@ -357,20 +357,6 @@ public class TextAnalyzer {
                         continue;
 
                     }
-//                    StringBuilder output = new StringBuilder();
-//                    for (int i = 0; i < path.size(); i++) {
-//                        // 将当前字符串追加到输出中
-//                        output.append(path.get(i));
-//
-//                        // 检查是否是列表中的最后一个字符串
-//                        if (i < path.size() - 1) {
-//                        // 如果不是最后一个字符串，添加一个空格
-//                        output.append("->");
-//
-//                    }
-//                    }
-                    // 输出最终结果
-//                    System.out.println(output.toString());
                     System.out.println("选择你要实现的功能 3查询桥接词 4根据bridge word生成新文本 5计算两个单词之间的最短路径 6随机游走");
                 }
             }
