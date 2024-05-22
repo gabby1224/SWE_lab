@@ -1,13 +1,36 @@
 package HackerDemo;
 import org.graphstream.graph.*;
 import org.graphstream.graph.implementations.*;
+import org.graphstream.algorithm.Dijkstra;
 import org.graphstream.ui.view.Viewer;
 import java.io.*;
 import java.util.*;
 import java.util.Random;
 
+class GraphMat{
+    private byte adjacencyMatrix[][]; // 设置邻接矩阵，因为邻边设置长度为1，为1有边
+    public String[] node_name;
+    public int num_node;
+    public GraphMat(Graph graph)
+    {
+        this.num_node = 0;
+        this.num_node = graph.getNodeCount();
+        int n = this.num_node;
+        this.adjacencyMatrix = new byte[n][n];
+        this.node_name = new String[n + 1];
+        for (int i = 0; i < n; i++) {
+            this.node_name[i] = graph.getNode(i).getId();
+            for (int j = 0; j < n; j++)
+                this.adjacencyMatrix[i][j] = (byte) (graph.getNode(i).hasEdgeBetween(j) ? 1 : 0);
+        }
+    }
+
+}
+
+
 public class TextAnalyzer {
     private Graph graph;
+
 
     public TextAnalyzer(String filename) throws IOException {
         this.graph = new MultiGraph("TextGraph");
@@ -15,6 +38,7 @@ public class TextAnalyzer {
         this.graph.setAutoCreate(true);
         processFile(filename);
     }
+
 
     private static String readTextFile(String filePath) {
         StringBuilder sb = new StringBuilder();
@@ -32,7 +56,7 @@ public class TextAnalyzer {
         return sb.toString();
     }
 
-    // 处理文本并返回结果
+    // 处理文本,转换成小写且去掉特殊字符，返回字符串
     private static String processText(String text) {
         StringBuilder sb = new StringBuilder();
         boolean lastCharWasLetter = false;
@@ -98,10 +122,11 @@ public class TextAnalyzer {
 
     }
 
+    // 判断桥接词
     public List<String> queryBridgeWords(String word1, String word2) {
         if (graph.getNode(word1) == null||graph.getNode(word2) == null) {
             List<String> list = new ArrayList<>();
-            list.add(" ");
+            list.add(" ");//TODO： 这里输入输出有问题
             return list;//若没有这两个词，返回的不是null，而是一个有" "的列表
         }
 
@@ -119,6 +144,7 @@ public class TextAnalyzer {
         return bridges;
     }
 
+    // 生成含有桥接词的序列
     public List<String> generateNewText(String sentence) {
         String[] words = sentence.split("\\s+");
 
@@ -156,7 +182,7 @@ public class TextAnalyzer {
     }
 
 
-
+    //todo: 重写最短路径算法
     public List<String> shortestPath(String start, String end) {
     if (graph.getNode(start) == null|| graph.getNode(end) == null) {
         System.out.println("One or both nodes not in the graph!");
@@ -187,6 +213,7 @@ public class TextAnalyzer {
         }
     }
 
+
     // Reconstruct path
     LinkedList<String> path = new LinkedList<>();
     for (String at = end; at != null; at = pred.get(at)) {
@@ -198,6 +225,42 @@ public class TextAnalyzer {
         return Collections.emptyList();
     }
 }
+
+    // 不能用
+    public void Dijstra(String start, String end, Graph g)
+    {
+        g.display(false);
+
+        // Edge lengths are stored in an attribute called "length"
+        // The length of a path is the sum of the lengths of its edges
+        Dijkstra dijkstra = new Dijkstra(Dijkstra.Element.EDGE, null, "length");
+
+        // Compute the shortest paths in g from A to all nodes
+        dijkstra.init(g);
+        dijkstra.setSource(g.getNode("A"));
+        dijkstra.compute();
+
+        // Print the lengths of all the shortest paths
+        // 可选功能：
+        for (Node node : g)
+        {
+            System.out.printf("%s->%s:%10.2f%n", dijkstra.getSource(), node,
+                    dijkstra.getPathLength(node));
+        }
+
+
+        // Color in blue all the nodes on the shortest path form A to B
+        for (Node node : dijkstra.getPathNodes(g.getNode("B")))
+            node.setAttribute("ui.style", "fill-color: blue;");
+
+        // Color in red all the edges in the shortest path tree
+        for (Edge edge : dijkstra.getTreeEdges())
+            edge.setAttribute("ui.style", "fill-color: red;");
+
+        // Print the shortest path from A to B
+        System.out.println(dijkstra.getPath(g.getNode("B")));
+
+    }
 
     public static void main(String[] args) throws IOException {
         Scanner scanner = new Scanner(System.in); // 创建Scanner对象
@@ -266,6 +329,7 @@ public class TextAnalyzer {
                         continue;
                     }
                     List<String> path = tg.shortestPath(words[0].toLowerCase(), words[1].toLowerCase());
+                    tg.Dijstra(words[0].toLowerCase(), words[1].toLowerCase(), tg.graph);
 
                     if ( path.isEmpty()){
                         System.out.println("不可达");
