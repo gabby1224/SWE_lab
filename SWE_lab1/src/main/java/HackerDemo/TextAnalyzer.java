@@ -10,6 +10,7 @@ import java.io.*;
 import java.util.*;
 import java.util.Random;
 
+// 没什么用的类
 class GraphMat{
     private byte adjacencyMatrix[][]; // 设置邻接矩阵，因为邻边设置长度为1，为1有边
     public String[] node_name;
@@ -195,51 +196,35 @@ public class TextAnalyzer {
     }
 
 
-    //todo: 重写最短路径算法
-    public List<String> shortestPath(String start, String end) {
-    if (graph.getNode(start) == null|| graph.getNode(end) == null) {
-        System.out.println("One or both nodes not in the graph!");
-        return Collections.emptyList();
-    }
+    public Map<String, Integer> calculateDistancesFrom(String startNodeId) {
+        Map<String, Integer> distances = new HashMap<>();
+        Node startNode = graph.getNode(startNodeId);
 
-    Map<String, String> pred = new HashMap<>();
-    Queue<String> queue = new LinkedList<>();
-    Set<String> visited = new HashSet<>();
-
-    queue.add(start);
-    visited.add(start);
-    pred.put(start, null);
-
-    // BFS to find shortest path
-    while (!queue.isEmpty()) {
-        String current = queue.poll();
-        if (current.equals(end)) {
-            break;
+        if (startNode == null) {
+            throw new IllegalArgumentException("Node " + startNodeId + " does not exist in the graph.");
         }
-        for (Edge edge : graph.getNode(current).getLeavingEdgeSet()) {
-            String neighbor = edge.getTargetNode().getId();
-            if (!visited.contains(neighbor)) {
-                visited.add(neighbor);
-                pred.put(neighbor, current);
-                queue.add(neighbor);
+
+        for (Node node : graph) {
+            String nodeId = node.getId();
+            if (nodeId.equals(startNodeId)) {
+                distances.put(nodeId, 0); // Distance to itself is defined as infinity
+            } else {
+                Edge edge = graph.getEdge(startNodeId + "_" + nodeId);
+                if (edge != null) {
+                    int weight = edge.getAttribute("weight");
+                    distances.put(nodeId, weight);
+                } else {
+                    distances.put(nodeId, Integer.MAX_VALUE); // No direct edge, distance is infinity
+                }
             }
         }
-    }
 
-
-    // Reconstruct path
-    LinkedList<String> path = new LinkedList<>();
-    for (String at = end; at != null; at = pred.get(at)) {
-        path.addFirst(at);
+        return distances;
     }
-    if (path.getFirst().equals(start)) {
-        return path;
-    } else {
-        return Collections.emptyList();
-    }
-}
 
     // 可以输出红色最短路径，并打印所有节点最短路径长度
+    // 这是掉了包的实现
+    //TODO：重写这个Dij算法
     public void Dijstra(String start, String end)
     {
         if (graph.getNode(start) == null|| graph.getNode(end) == null) {
@@ -281,35 +266,172 @@ public class TextAnalyzer {
 
     }
 
-    //function 6: 图上随机游走，直到判环
-    public String Randomwalk()
-    {
-        RandomWalk rwalk = new RandomWalk();
+    private static class NodeDistance {
+        String nodeId;
+        int distance;
 
-// Populate the graph.
-        rwalk.setEntityCount(this.graph.getNodeCount());
-        rwalk.init(this.graph);
-        int[] passed = new int[this.graph.getNodeCount()];
-        String ret = new String();
+        NodeDistance(String nodeId, int distance) {
+            this.nodeId = nodeId;
+            this.distance = distance;
+        }
+    }
 
-        for(int i=0; i<1000; i++) {
-            rwalk.compute();
-            for(Node n : this.graph)
+    private List<String> getPath(Map<String, String> previous, String start, String end) {
+        LinkedList<String> path = new LinkedList<>();
+        for (String at = end; at != null; at = previous.get(at)) {
+            System.out.println(at);
+            path.addFirst(at);
+        }
+        System.out.println(start);
+        path.addFirst(start);
+        if (!path.isEmpty() && path.getFirst().equals(start)) {
+            return path;
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
+    private void highlightPath(List<String> path) {
+        int j = path.size() - 1; // last index
+        for (String nodeId : path) {
+            Node node = graph.getNode(nodeId);
+            System.out.print(nodeId);
+            if(!node.equals(path.get(j)))
             {
-                int id = n.getIndex();
-                if(rwalk.getPasses(n) > passed[id])
-                {
-                    System.out.printf("%s ", n.getId());
-                    ret += n.getId() + " ";
-                    passed[id] = (int) rwalk.getPasses(n);
-                    break;
+                System.out.print("-> ");
+            }
+            node.setAttribute("ui.style", "fill-color: yellow;");
+        }
+        for (int i = 0; i < path.size() - 1; i++) {
+            String edgeId = path.get(i) + "_" + path.get(i + 1);
+            Edge edge = graph.getEdge(edgeId);
+            if (edge != null) {
+                edge.setAttribute("ui.style", "fill-color: red;");
+            }
+        }
+    }
+
+
+    public List<String> My_Dij(String start, String end) {
+        if (graph.getNode(start) == null || graph.getNode(end) == null) {
+            System.out.println("One or both nodes not in the graph!");
+            return null;
+        }
+
+        //记录dist数组
+        Map<String, Integer> dist = calculateDistancesFrom(start);
+        //优先队列维护最短边
+        PriorityQueue<NodeDistance> pq = new PriorityQueue<>(Comparator.comparingInt(nd -> nd.distance));
+        //是否访问过
+        Set<String> visited = new HashSet<>();
+        Map<String, String> previous = new HashMap<>();
+
+        //从自己dist = 0开始
+        pq.add(new NodeDistance(start, 0));
+        for(String name: dist.keySet())
+        {
+            pq.add(new NodeDistance(name, dist.get(name)));
+        }
+
+        while (!pq.isEmpty()) {
+            NodeDistance current = pq.poll();
+            String currentNodeId = current.nodeId;
+
+            //如果访问过则continue
+            if (!visited.add(currentNodeId)) {
+                continue;
+            }
+
+            //用当前边更新所有边权
+            for (Edge edge : graph.getNode(currentNodeId).getLeavingEdgeSet()) {
+                String neighbor = edge.getTargetNode().getId();
+                int weight = edge.getAttribute("weight");
+                int newDist = dist.get(currentNodeId) + weight;
+                System.out.println(neighbor);
+                System.out.println(newDist);
+
+                if (newDist < dist.get(neighbor)) {
+                    dist.put(neighbor, newDist);
+                    previous.put(neighbor, currentNodeId);
+                    pq.add(new NodeDistance(neighbor, newDist));
                 }
             }
         }
 
-        rwalk.terminate();
+        //打印start-->end的路径节点
+        // Print the shortest path distance to the end node
+        List<String> path = new ArrayList<>();
+        if (dist.get(end) == Integer.MAX_VALUE) {
+            System.out.println("There is no path from " + start + " -> " + end);
+        } else {
+            System.out.println("Shortest path from " + start + " -> " + end + " is " + dist.get(end));
+            path = getPath(previous, start, end);
 
-        return ret;
+            highlightPath(path);
+        }
+
+        //打印到所有节点的最短路径长
+        for (Map.Entry<String, Integer> entry : dist.entrySet()) {
+            System.out.println("Distance from " + start + " -> " + entry.getKey() + " is " + entry.getValue());
+        }
+        return path;
+    }
+
+    //function 6: 图上随机游走，直到判环
+    public String MyRandomWalk(int steps) {
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Press ENTER to stop the random walk...");
+
+        Random random = new Random();
+        List<Node> nodes = new ArrayList<>();
+        for (Node node : graph) {
+            nodes.add(node);
+        }
+
+        if (nodes.isEmpty()) {
+            return "The graph is empty!";
+        }
+
+        // 随机Start from a node
+        Node currentNode = nodes.get(random.nextInt(nodes.size()));
+        System.out.println("The starting point is " + "\"" + currentNode.getId() + "\"");
+        StringBuilder result = new StringBuilder();
+        Set<Node> visited = new HashSet<>();
+        visited.add(currentNode);
+
+        for (int i = 0; i < steps; i++) {
+            result.append(currentNode.getId()).append("-> ");
+            try {
+                if (System.in.available() > 0) {
+                    int input = System.in.read();
+                    if (input == '\n') {
+                        break;
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            //收集所有的邻居，一遍进行randomwalk
+            List<Node> neighbors = new ArrayList<>();
+            for (Edge edge : currentNode.getEachEdge()) {
+                Node neighbor = edge.getOpposite(currentNode);
+                neighbors.add(neighbor);
+            }
+
+            //无处边情况
+            if (neighbors.isEmpty()) {
+                break;
+            }
+            //移动到下一个随机节点
+            currentNode = neighbors.get(random.nextInt(neighbors.size()));
+            //如果遇到了之前访问过的额节点，推出
+            if (visited.contains(currentNode)) {
+                // result.append(currentNode.getId()).append(" ");
+                break;
+            }
+            visited.add(currentNode);
+        }
+        return result.toString().trim();
     }
 
     public static void main(String[] args) throws IOException {
@@ -382,21 +504,20 @@ public class TextAnalyzer {
                         System.out.println("选择你要实现的功能 3查询桥接词 4根据bridge word生成新文本 5计算两个单词之间的最短路径 6随机游走");
                         continue;
                     }
-                    List<String> path = tg.shortestPath(words[0].toLowerCase(), words[1].toLowerCase());
-                    tg.Dijstra(words[0].toLowerCase(), words[1].toLowerCase());
+
+                    List<String> path = tg.My_Dij(words[0].toLowerCase(), words[1].toLowerCase());
 
                     if ( path.isEmpty()){
                         System.out.println("不可达");
                         System.out.println("选择你要实现的功能 3查询桥接词 4根据bridge word生成新文本 5计算两个单词之间的最短路径 6随机游走");
                         continue;
-
                     }
                     System.out.println("选择你要实现的功能 3查询桥接词 4根据bridge word生成新文本 5计算两个单词之间的最短路径 6随机游走");
                 }
                 if (fun.equals("6"))
                 {
                     tg.init_graph();
-                    String ret = tg.Randomwalk();
+                    String ret = tg.MyRandomWalk(1000);
                     System.out.println(ret);
                     //todo: 写入文件
                     FileWriter writer;
@@ -409,6 +530,11 @@ public class TextAnalyzer {
                         e.printStackTrace();
                     }
                     System.out.println("选择你要实现的功能 3查询桥接词 4根据bridge word生成新文本 5计算两个单词之间的最短路径 6随机游走");
+                }
+                if (fun.equals("7"))
+                {
+                    System.out.println("GoodBye!");
+                    break;
                 }
             }
         }
