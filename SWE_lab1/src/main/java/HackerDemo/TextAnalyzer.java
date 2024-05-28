@@ -79,7 +79,9 @@ public class TextAnalyzer {
     private void processFile(String filename) throws IOException {
 
         String text = readTextFile(filename);
+        System.out.println("Processing file...");
         String processedText = processText(text);
+        System.out.println(processedText);
 
         BufferedReader reader = new BufferedReader(new FileReader(filename));
 
@@ -110,7 +112,10 @@ public class TextAnalyzer {
 
     public void showDirectedGraph() {
 
-        graph.setAttribute("ui.stylesheet", "node{ size: 10px, 10px; shape: circle; fill-color: #B1DFF7; stroke-mode: plain; stroke-color: #B1DFF7; stroke-width: 3; text-mode: normal; /*normal or hidden*/ text-background-mode: plain; /*plain or none*/ text-background-color: rgba(255, 255, 255, 200); text-alignment: above;}");
+        graph.setAttribute("ui.stylesheet", "node{ size: 10px, 10px; shape: circle; fill-color: #B1DFF7; stroke-mode: plain; stroke-color: #B1DFF7; stroke-width: 5; text-mode: normal; text-size: 20px; /*normal or hidden*/ text-background-mode: plain; /*plain or none*/ text-background-color: rgba(255, 255, 255, 200); text-alignment: above;}"+
+                "edge { " +
+                "   text-size: 20px; " +  // 设置边标签字体大小
+                "}");
 
         Viewer viewer = graph.display();
 
@@ -279,10 +284,8 @@ public class TextAnalyzer {
     private List<String> getPath(Map<String, String> previous, String start, String end) {
         LinkedList<String> path = new LinkedList<>();
         for (String at = end; at != null; at = previous.get(at)) {
-            System.out.println(at);
             path.addFirst(at);
         }
-        System.out.println(start);
         path.addFirst(start);
         if (!path.isEmpty() && path.getFirst().equals(start)) {
             return path;
@@ -296,9 +299,12 @@ public class TextAnalyzer {
         for (String nodeId : path) {
             Node node = graph.getNode(nodeId);
             System.out.print(nodeId);
-            if(!node.equals(path.get(j)))
+            if(!node.getId().equals(path.get(j)))
             {
-                System.out.print("-> ");
+                System.out.print(" -> ");
+            }
+            else {
+                System.out.println();
             }
             node.setAttribute("ui.style", "fill-color: yellow;");
         }
@@ -347,8 +353,6 @@ public class TextAnalyzer {
                 String neighbor = edge.getTargetNode().getId();
                 int weight = edge.getAttribute("weight");
                 int newDist = dist.get(currentNodeId) + weight;
-                System.out.println(neighbor);
-                System.out.println(newDist);
 
                 if (newDist < dist.get(neighbor)) {
                     dist.put(neighbor, newDist);
@@ -440,8 +444,16 @@ public class TextAnalyzer {
         String input = scanner.nextLine(); // 读取用户输入的一行文本
         TextAnalyzer tg = new TextAnalyzer(input);
         tg.showDirectedGraph();
-
-        System.out.println("选择你要实现的功能 3查询桥接词 4根据bridge word生成新文本 5计算两个单词之间的最短路径 6随机游走");
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.out.println("选择你要实现的功能`v´:\n" +
+                " 3)查询桥接词\n" +
+                " 4)根据bridge word生成新文本\n" +
+                " 5)计算两个单词之间的最短路径\n" +
+                " 6)随机游走\n");
         while (true) {
             while (scanner.hasNextLine()) {
                 String fun = scanner.nextLine();
@@ -452,7 +464,11 @@ public class TextAnalyzer {
                     String[] words = scanner.nextLine().split("\\s+");
                     if (words.length != 2) {
                         System.out.println("Please enter exactly two words.");
-                        System.out.println("选择你要实现的功能 3查询桥接词 4根据bridge word生成新文本 5计算两个单词之间的最短路径 6随机游走");
+                        System.out.println("选择你要实现的功能`v´:\n" +
+                                " 3)查询桥接词\n" +
+                                " 4)根据bridge word生成新文本\n" +
+                                " 5)计算两个单词之间的最短路径\n" +
+                                " 6)随机游走\n");
 
                         continue;
                     }
@@ -472,7 +488,11 @@ public class TextAnalyzer {
 
                         }
                     }
-                    System.out.println("选择你要实现的功能 3查询桥接词 4根据bridge word生成新文本 5计算两个单词之间的最短路径 6随机游走");
+                    System.out.println("选择你要实现的功能`v´:\n" +
+                            " 3)查询桥接词\n" +
+                            " 4)根据bridge word生成新文本\n" +
+                            " 5)计算两个单词之间的最短路径\n" +
+                            " 6)随机游走\n");
                 }
                 if (fun.equals("4")) {
                     tg.init_graph();
@@ -493,7 +513,11 @@ public class TextAnalyzer {
                     }
                     // 输出最终结果
                     System.out.println(output.toString());
-                    System.out.println("选择你要实现的功能 3查询桥接词 4根据bridge word生成新文本 5计算两个单词之间的最短路径 6随机游走");
+                    System.out.println("选择你要实现的功能`v´:\n" +
+                            " 3)查询桥接词\n" +
+                            " 4)根据bridge word生成新文本\n" +
+                            " 5)计算两个单词之间的最短路径\n" +
+                            " 6)随机游走\n");
                 }
                 if (fun.equals("5")) {
                     tg.init_graph();
@@ -501,18 +525,30 @@ public class TextAnalyzer {
                     String[] words = scanner.nextLine().split("\\s+");
                     if (words.length != 2) {
                         System.out.println("Please enter exactly two words.");
-                        System.out.println("选择你要实现的功能 3查询桥接词 4根据bridge word生成新文本 5计算两个单词之间的最短路径 6随机游走");
+                        System.out.println("选择你要实现的功能`v´:\n" +
+                                " 3)查询桥接词\n" +
+                                " 4)根据bridge word生成新文本\n" +
+                                " 5)计算两个单词之间的最短路径\n" +
+                                " 6)随机游走\n");
                         continue;
                     }
 
                     List<String> path = tg.My_Dij(words[0].toLowerCase(), words[1].toLowerCase());
 
-                    if ( path.isEmpty()){
+                    if ( path == null || path.isEmpty()){
                         System.out.println("不可达");
-                        System.out.println("选择你要实现的功能 3查询桥接词 4根据bridge word生成新文本 5计算两个单词之间的最短路径 6随机游走");
+                        System.out.println("选择你要实现的功能`v´:\n" +
+                                " 3)查询桥接词\n" +
+                                " 4)根据bridge word生成新文本\n" +
+                                " 5)计算两个单词之间的最短路径\n" +
+                                " 6)随机游走\n");
                         continue;
                     }
-                    System.out.println("选择你要实现的功能 3查询桥接词 4根据bridge word生成新文本 5计算两个单词之间的最短路径 6随机游走");
+                    System.out.println("选择你要实现的功能`v´:\n" +
+                            " 3)查询桥接词\n" +
+                            " 4)根据bridge word生成新文本\n" +
+                            " 5)计算两个单词之间的最短路径\n" +
+                            " 6)随机游走\n");
                 }
                 if (fun.equals("6"))
                 {
@@ -529,12 +565,16 @@ public class TextAnalyzer {
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                    System.out.println("选择你要实现的功能 3查询桥接词 4根据bridge word生成新文本 5计算两个单词之间的最短路径 6随机游走");
+                    System.out.println("选择你要实现的功能`v´:\n" +
+                            " 3)查询桥接词\n" +
+                            " 4)根据bridge word生成新文本\n" +
+                            " 5)计算两个单词之间的最短路径\n" +
+                            " 6)随机游走\n");
                 }
                 if (fun.equals("7"))
                 {
                     System.out.println("GoodBye!");
-                    break;
+                    return;
                 }
             }
         }
