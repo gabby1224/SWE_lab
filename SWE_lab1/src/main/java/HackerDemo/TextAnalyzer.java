@@ -419,6 +419,7 @@ public class TextAnalyzer {
             List<Node> neighbors = new ArrayList<>();
             for (Edge edge : currentNode.getEachEdge()) {
                 Node neighbor = edge.getOpposite(currentNode);
+                System.out.println(neighbor.getId());
                 neighbors.add(neighbor);
             }
 
@@ -428,14 +429,74 @@ public class TextAnalyzer {
             }
             //移动到下一个随机节点
             currentNode = neighbors.get(random.nextInt(neighbors.size()));
-            //如果遇到了之前访问过的额节点，推出
+            //如果遇到了之前访问过的额节点，退出
             if (visited.contains(currentNode)) {
                 // result.append(currentNode.getId()).append(" ");
+                System.out.println("");
                 break;
             }
             visited.add(currentNode);
         }
         return result.toString().trim();
+    }
+
+    public void startTraversal(String filename) throws IOException {
+        Set<String> visitedEdges = new HashSet<>();
+        BufferedWriter writer;
+        Iterator<String> iterator = visitedEdges.iterator();
+        while(iterator.hasNext()){
+
+            iterator.remove();
+
+        }
+        writer = new BufferedWriter(new FileWriter(filename));
+        Node currentNode = getRandomNode();
+        if (currentNode == null) {
+            System.out.println("Graph is empty.");
+            return;
+        }
+
+        try {
+            System.out.println("Starting traversal from node: " + currentNode.getId());
+            writer.write("Starting traversal from node: " + currentNode.getId() + "\n");
+
+            while (true) {
+                Iterator<Edge> edgeIterator = currentNode.getLeavingEdgeIterator();
+                if (!edgeIterator.hasNext()) {
+                    System.out.println("No more edges to traverse from node: " + currentNode.getId());
+                    break;
+                }
+
+                Edge edge = getRandomEdge(edgeIterator);
+                if (!visitedEdges.add(edge.getId())) {
+                    System.out.println("Encountered a previously visited edge: " + edge.getId());
+                    break;
+                }
+
+                currentNode = edge.getTargetNode();
+                System.out.println("Traversing to node: " + currentNode.getId());
+                writer.write("Traversing to node: " + currentNode.getId() + "\n");
+                writer.flush();
+            }
+        } finally {
+            writer.close();
+        }
+    }
+
+    //wsz 图上随机游走
+    private Node getRandomNode() {
+        int size = graph.getNodeCount();
+        if (size == 0) return null;
+        int index = new Random().nextInt(size);
+        return graph.getNode(index);
+    }
+
+    private Edge getRandomEdge(Iterator<Edge> edgeIterator) {
+        List<Edge> edges = new ArrayList<>();
+        while (edgeIterator.hasNext()) {
+            edges.add(edgeIterator.next());
+        }
+        return edges.get(new Random().nextInt(edges.size()));
     }
 
     public static void main(String[] args) throws IOException {
@@ -553,18 +614,19 @@ public class TextAnalyzer {
                 if (fun.equals("6"))
                 {
                     tg.init_graph();
-                    String ret = tg.MyRandomWalk(1000);
-                    System.out.println(ret);
-                    //todo: 写入文件
-                    FileWriter writer;
-                    try {
-                        writer = new FileWriter("./randomwalk.txt", true);
-                        writer.write(ret);
-                        writer.flush();
-                        writer.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+//                    String ret = tg.MyRandomWalk(1000);
+//                    System.out.println(ret);
+//                    // todo: 写入文件
+//                    FileWriter writer;
+//                    try {
+//                        writer = new FileWriter("./randomwalk.txt", true);
+//                        writer.write(ret);
+//                        writer.flush();
+//                        writer.close();
+//                    } catch (IOException e) {
+//                        e.printStackTrace();
+//                    }
+                    tg.startTraversal("./output.txt");
                     System.out.println("选择你要实现的功能`v´:\n" +
                             " 3)查询桥接词\n" +
                             " 4)根据bridge word生成新文本\n" +

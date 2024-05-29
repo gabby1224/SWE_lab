@@ -1,0 +1,11 @@
+Starting traversal from node: explore
+Traversing to node: strange
+Traversing to node: new
+Traversing to node: worlds
+Traversing to node: to
+Traversing to node: seek
+Traversing to node: out
+Traversing to node: new
+Traversing to node: life
+Traversing to node: and
+Traversing to node: new
