@@ -380,7 +380,6 @@ public class TextAnalyzer {
         }
         return path;
     }
-    // here add something！
 
     //function 6: 图上随机游走，直到判环
     public String MyRandomWalk(int steps) {
