@@ -365,7 +365,7 @@ public class TextAnalyzer {
         //打印start-->end的路径节点
         // Print the shortest path distance to the end node
         List<String> path = new ArrayList<>();
-        if (dist.get(end) == Integer.MAX_VALUE) {
+        if (dist.get(end) < 0) {
             System.out.println("There is no path from " + start + " -> " + end);
         } else {
             System.out.println("Shortest path from " + start + " -> " + end + " is " + dist.get(end));
