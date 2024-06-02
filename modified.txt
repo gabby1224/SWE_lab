@@ -1,1 +1,5 @@
+<<<<<<< HEAD
 add new things!
+=======
+ii
+>>>>>>> C4
